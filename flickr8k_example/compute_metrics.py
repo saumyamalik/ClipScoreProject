@@ -4,7 +4,7 @@ Computes the metrics for Flickr8K.
 import sys
 sys.path.append('../')
 import clipscore
-import generation_eval_utils
+import flickr8k_example.generation_eval_utils as generation_eval_utils
 import scipy.stats
 import os
 import json
@@ -34,13 +34,14 @@ def compute_human_correlation(input_json, image_directory, tauvariant='c'):
             refs.append([' '.join(gt.split()) for gt in v['ground_truth']])
             candidates.append(' '.join(human_judgement['caption'].split()))
             human_scores.append(human_judgement['rating'])
-
+    print(candidates[2871])
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if device == 'cpu':
         warnings.warn(
             'CLIP runs in full float32 on CPU. Results in paper were computed on GPU, which uses float16. '
             'If you\'re reporting results on CPU, please note this when you report.')
     model, transform = clip.load("ViT-B/32", device=device, jit=False)
+    model.load_state_dict(torch.load("../fine_tuned_every_step/clip_model_6_.model"))
     model.eval()
 
     image_feats = clipscore.extract_all_images(
@@ -56,19 +57,19 @@ def compute_human_correlation(input_json, image_directory, tauvariant='c'):
 
     # F-score
     refclipscores = 2 * per_instance_image_text * per_instance_text_text / (per_instance_image_text + per_instance_text_text)
-    other_metrics = generation_eval_utils.get_all_metrics(refs, candidates, return_per_cap=True)
+    #other_metrics = generation_eval_utils.get_all_metrics(refs, candidates, return_per_cap=True)
 
     print('CLIPScore Tau-{}: {:.3f}'.format(tauvariant, 100*scipy.stats.kendalltau(per_instance_image_text, human_scores, variant=tauvariant)[0]))
     print('RefCLIPScore Tau-{}: {:.3f}'.format(tauvariant, 100*scipy.stats.kendalltau(refclipscores, human_scores, variant=tauvariant)[0]))
 
-    for k, v in other_metrics.items():
-        if k == 'bleu':
-            v = v[-1] # just do BLEU-4
-            k = 'bleu-4'
-        if k == 'spice':
-            v = [float(item['All']['f']) for item in v]
+    # for k, v in other_metrics.items():
+    #     if k == 'bleu':
+    #         v = v[-1] # just do BLEU-4
+    #         k = 'bleu-4'
+    #     if k == 'spice':
+    #         v = [float(item['All']['f']) for item in v]
             
-        print('{} Tau-{}: {:.3f}'.format(k, tauvariant, 100*scipy.stats.kendalltau(v, human_scores, variant=tauvariant)[0]))
+    #     print('{} Tau-{}: {:.3f}'.format(k, tauvariant, 100*scipy.stats.kendalltau(v, human_scores, variant=tauvariant)[0]))
 
 
 def main():

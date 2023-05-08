@@ -10,7 +10,7 @@ Code for CLIPScore (https://arxiv.org/abs/2104.08718)
 import argparse
 import clip
 import torch
-from PIL import Image
+from PIL import Image, ImageFilter
 from sklearn.preprocessing import normalize
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 import torch
@@ -21,7 +21,7 @@ import collections
 import os
 import pathlib
 import json
-import generation_eval_utils
+import flickr8k_example.generation_eval_utils as generation_eval_utils
 import pprint
 import warnings
 from packaging import version
@@ -97,6 +97,8 @@ class CLIPImageDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         c_data = self.data[idx]
         image = Image.open(c_data)
+        image = image.rotate(45)
+        #image = image.filter(ImageFilter.GaussianBlur(radius=7.5))
         image = self.preprocess(image)
         return {'image':image}
 
