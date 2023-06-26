@@ -1,4 +1,4 @@
-# What's in here?
+# [CLIPSCORE PAPER README] What's in here?
 
 This repo contains the code for our EMNLP 2021 paper: [CLIPScore: A
 Reference-free Evaluation Metric for Image
